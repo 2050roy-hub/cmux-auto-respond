@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+*.swp
+
+# Config (user-specific)
+*.config.json
+
+# Temp/runtime
+/tmp/
+*.log
