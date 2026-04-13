@@ -5,6 +5,7 @@ cmux Auto-Tuner — 自動優化 session 輪替門檻值
 追蹤每次 session 的 token 消耗，找到最省的 context % 門檻。
 由 daemon 腳本在每次輪替時呼叫。
 """
+
 import json
 import os
 import time
@@ -55,9 +56,10 @@ def update_script_threshold(new_threshold):
         with open(SCRIPT_FILE) as f:
             content = f.read()
         import re
+
         content = re.sub(
-            r'CTX_THRESHOLD=\d+',
-            f'CTX_THRESHOLD={new_threshold}',
+            r"CTX_THRESHOLD=\d+",
+            f"CTX_THRESHOLD={new_threshold}",
             content,
         )
         with open(SCRIPT_FILE, "w") as f:
@@ -114,12 +116,14 @@ def end_session(ctx_pct, tokens_total, actions_count):
     if len(stats["sessions"]) >= ADJUST_AFTER:
         new_threshold = analyze_and_adjust(stats)
         if new_threshold != stats["current_threshold"]:
-            stats["adjustment_history"].append({
-                "timestamp": time.time(),
-                "old": stats["current_threshold"],
-                "new": new_threshold,
-                "reason": f"Based on {len(stats['sessions'])} sessions",
-            })
+            stats["adjustment_history"].append(
+                {
+                    "timestamp": time.time(),
+                    "old": stats["current_threshold"],
+                    "new": new_threshold,
+                    "reason": f"Based on {len(stats['sessions'])} sessions",
+                }
+            )
             stats["current_threshold"] = new_threshold
             update_script_threshold(new_threshold)
 
@@ -231,6 +235,7 @@ def get_status():
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print(json.dumps(get_status(), indent=2, ensure_ascii=False))
         sys.exit(0)
@@ -245,4 +250,6 @@ if __name__ == "__main__":
     elif cmd == "status":
         print(json.dumps(get_status(), indent=2, ensure_ascii=False))
     else:
-        print("Usage: auto-tuner.py [start <ctx%> <tokens> | end <ctx%> <tokens> <actions> | status]")
+        print(
+            "Usage: auto-tuner.py [start <ctx%> <tokens> | end <ctx%> <tokens> <actions> | status]"
+        )

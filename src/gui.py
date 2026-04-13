@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """cmux Auto-Respond 控制面板"""
-import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
-import subprocess
+
 import json
 import os
 import re
+import subprocess
+import tkinter as tk
+from tkinter import messagebox, scrolledtext, ttk
 
 PLIST = os.path.expanduser("~/Library/LaunchAgents/com.luke.cmux-monitor.plist")
 SCRIPT = os.path.expanduser("~/.local/bin/cmux-auto-respond.sh")
@@ -47,9 +48,7 @@ def save_config(cfg):
 
 def is_running():
     try:
-        out = subprocess.check_output(
-            ["launchctl", "list"], text=True, stderr=subprocess.DEVNULL
-        )
+        out = subprocess.check_output(["launchctl", "list"], text=True, stderr=subprocess.DEVNULL)
         return "com.luke.cmux-monitor" in out
     except Exception:
         return False
@@ -135,14 +134,18 @@ class App:
         ttk.Label(interval_frame, text="每", font=FONT_NORMAL).pack(side="left")
         self.interval_var = tk.StringVar(value=str(self.config.get("interval", 10)))
         self.interval_entry = tk.Spinbox(
-            interval_frame, from_=5, to=120, width=5,
-            textvariable=self.interval_var, font=FONT_NORMAL
+            interval_frame,
+            from_=5,
+            to=120,
+            width=5,
+            textvariable=self.interval_var,
+            font=FONT_NORMAL,
         )
         self.interval_entry.pack(side="left", padx=8)
         ttk.Label(interval_frame, text="秒檢查一次", font=FONT_NORMAL).pack(side="left")
-        ttk.Button(
-            interval_frame, text="套用", command=self.apply_interval, width=6
-        ).pack(side="right")
+        ttk.Button(interval_frame, text="套用", command=self.apply_interval, width=6).pack(
+            side="right"
+        )
 
         # === Rules Frame (all responses editable) ===
         rules_frame = ttk.LabelFrame(root, text="  自動回覆規則（回覆可自由修改）  ", padding=12)
@@ -162,7 +165,9 @@ class App:
             cb = ttk.Checkbutton(frame, variable=enabled_var, command=self.save_rules)
             cb.pack(side="left")
 
-            ttk.Label(frame, text=f"{rule['trigger']}  →", font=FONT_NORMAL).pack(side="left", padx=(8, 4))
+            ttk.Label(frame, text=f"{rule['trigger']}  →", font=FONT_NORMAL).pack(
+                side="left", padx=(8, 4)
+            )
 
             entry = tk.Entry(frame, textvariable=response_var, font=FONT_ENTRY, width=18)
             entry.pack(side="left", padx=4)
@@ -170,7 +175,9 @@ class App:
             entry.bind("<Return>", lambda e: self.save_rules())
 
         # Save button for rules
-        ttk.Button(rules_frame, text="儲存規則", command=self.save_rules, width=10).pack(anchor="e", pady=(6, 0))
+        ttk.Button(rules_frame, text="儲存規則", command=self.save_rules, width=10).pack(
+            anchor="e", pady=(6, 0)
+        )
 
         # === Session Rotation Prompts ===
         rotation_frame = ttk.LabelFrame(root, text="  Session 輪替用語  ", padding=12)
@@ -181,8 +188,7 @@ class App:
             value=self.config.get("memory_prompt", DEFAULT_CONFIG["memory_prompt"])
         )
         tk.Entry(
-            rotation_frame, textvariable=self.memory_prompt_var,
-            font=FONT_ENTRY, width=60
+            rotation_frame, textvariable=self.memory_prompt_var, font=FONT_ENTRY, width=60
         ).pack(fill="x", pady=(2, 8))
 
         ttk.Label(rotation_frame, text="繼續指令：", font=FONT_NORMAL).pack(anchor="w")
@@ -190,11 +196,12 @@ class App:
             value=self.config.get("continue_prompt", DEFAULT_CONFIG["continue_prompt"])
         )
         tk.Entry(
-            rotation_frame, textvariable=self.continue_prompt_var,
-            font=FONT_ENTRY, width=60
+            rotation_frame, textvariable=self.continue_prompt_var, font=FONT_ENTRY, width=60
         ).pack(fill="x", pady=(2, 4))
 
-        ttk.Button(rotation_frame, text="儲存", command=self.save_prompts, width=8).pack(anchor="e", pady=(6, 0))
+        ttk.Button(rotation_frame, text="儲存", command=self.save_prompts, width=8).pack(
+            anchor="e", pady=(6, 0)
+        )
 
         # === Auto-Tuner Frame ===
         tuner_frame = ttk.LabelFrame(root, text="  自動調參  ", padding=12)
@@ -214,7 +221,9 @@ class App:
 
         btn_frame = ttk.Frame(log_frame)
         btn_frame.pack(fill="x", pady=(8, 0))
-        ttk.Button(btn_frame, text="重新整理", command=self.refresh_log, width=10).pack(side="left")
+        ttk.Button(btn_frame, text="重新整理", command=self.refresh_log, width=10).pack(
+            side="left"
+        )
         ttk.Button(btn_frame, text="清除 Log", command=self.clear_log, width=10).pack(side="right")
 
         self.refresh_status()
@@ -286,16 +295,22 @@ class App:
     def refresh_tuner(self):
         try:
             import subprocess
+
             result = subprocess.run(
                 ["python3", os.path.expanduser("~/.local/bin/cmux-auto-tuner.py"), "status"],
-                capture_output=True, text=True, timeout=3
+                capture_output=True,
+                text=True,
+                timeout=3,
             )
             data = json.loads(result.stdout)
             threshold = data.get("current_threshold", "?")
             sessions = data.get("total_sessions", 0)
             adjustments = data.get("adjustments", 0)
             avg_tpm = data.get("avg_tokens_per_min", "—")
-            text = f"門檻: {threshold}%  |  已輪替: {sessions} 次  |  調參: {adjustments} 次  |  平均: {avg_tpm} tok/min"
+            text = (
+                f"門檻: {threshold}%  |  已輪替: {sessions} 次  |"
+                f"  調參: {adjustments} 次  |  平均: {avg_tpm} tok/min"
+            )
             self.tuner_label.config(text=text)
         except Exception:
             self.tuner_label.config(text="尚無調參數據")
